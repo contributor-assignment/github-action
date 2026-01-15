@@ -82,13 +82,13 @@ function isCommentSignedByUser(
 		case "true":
 			return (
 				comment.match(
-					/^.*i \s*have \s*read \s*the \s*dco \s*document \s*and \s*i \s*hereby \s*sign \s*the \s*dco.*$/,
+					/^i\s+have\s+read\s+the\s+dco\s+document\s+and\s+i\s+hereby\s+sign\s+the\s+dco$/,
 				) !== null
 			);
 		case "false":
 			return (
 				comment.match(
-					/^.*i \s*have \s*read \s*the \s*caa \s*document \s*and \s*i \s*hereby \s*sign \s*the \s*caa.*$/,
+					/^i\s+have\s+read\s+the\s+caa\s+document\s+and\s+i\s+hereby\s+sign\s+the\s+caa$/,
 				) !== null
 			);
 		default:

@@ -12,9 +12,11 @@ import {
 	createFile,
 	getFileContent,
 	updateFile,
+	markSignaturesInvalidated,
 } from "./persistence/persistence";
 import { reRunLastWorkFlowIfRequired } from "./pullRerunRunner";
 import prCommentSetup from "./pullrequest/pullRequestComment";
+import { validateSignatures } from "./validateSignatures";
 
 export async function setupClaCheck() {
 	let committerMap = getInitialCommittersMap();
@@ -22,10 +24,23 @@ export async function setupClaCheck() {
 	let committers = await getCommitters();
 	committers = checkAllowList(committers);
 
-	const { claFileContent, sha } = (await getCAAFileContentandSHA(
+	let { claFileContent, sha } = (await getCAAFileContentandSHA(
 		committers,
 		committerMap,
 	)) as ClafileContentAndSha;
+
+	// Validate existing signatures - mark any where the comment was deleted/edited as invalidated
+	const { invalidSignatures } = await validateSignatures(
+		claFileContent?.signedContributors || [],
+		committers,
+	);
+
+	if (invalidSignatures.length > 0) {
+		core.info(
+			`Found ${invalidSignatures.length} invalid signature(s). Marking as invalidated...`,
+		);
+		sha = await markSignaturesInvalidated(sha, claFileContent, invalidSignatures);
+	}
 
 	committerMap = prepareCommiterMap(committers, claFileContent) as CommitterMap;
 
@@ -116,14 +131,19 @@ function prepareCommiterMap(
 ): CommitterMap {
 	let committerMap = getInitialCommittersMap();
 
+	// Only consider non-invalidated signatures as valid
+	const validSignatures = claFileContent?.signedContributors?.filter(
+		(cla: CommittersDetails) => !cla.invalidated_at,
+	) || [];
+
 	committerMap.notSigned = committers.filter(
 		(committer) =>
-			!claFileContent?.signedContributors.some(
-				(cla) => committer.id === cla.id,
+			!validSignatures.some(
+				(cla: CommittersDetails) => committer.id === cla.id,
 			),
 	);
 	committerMap.signed = committers.filter((committer) =>
-		claFileContent?.signedContributors.some((cla) => committer.id === cla.id),
+		validSignatures.some((cla: CommittersDetails) => committer.id === cla.id),
 	);
 	committers.map((committer) => {
 		if (!committer.id) {

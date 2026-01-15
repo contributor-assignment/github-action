@@ -22,7 +22,9 @@ export interface CommittersDetails {
     comment_id?: number,
     body?: string,
     repoId?: string,
-    comment_url?: string
+    comment_url?: string,
+    invalidated_at?: string,
+    invalidated_reason?: "comment_deleted" | "comment_edited" | "unverifiable"
 }
 export interface LabelName {
     current_name: string,

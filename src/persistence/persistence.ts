@@ -1,6 +1,6 @@
 import { context } from "@actions/github";
 import { GitHub } from "@actions/github/lib/utils";
-import { ReactedCommitterMap } from "../interfaces";
+import { CommittersDetails, ReactedCommitterMap } from "../interfaces";
 import { getDefaultOctokitClient, getPATOctokit } from "../octokit";
 
 import * as input from "../shared/getInputs";
@@ -65,6 +65,53 @@ export async function updateFile(
 		content: contentBinary,
 		branch: input.getBranch(),
 	});
+}
+
+export interface InvalidSignatureUpdate {
+	signer: CommittersDetails;
+	reason: "comment_deleted" | "comment_edited" | "unverifiable";
+}
+
+export async function markSignaturesInvalidated(
+	sha: string,
+	claFileContent: { signedContributors: CommittersDetails[] },
+	invalidSignatures: InvalidSignatureUpdate[],
+): Promise<string> {
+	const octokitInstance: InstanceType<typeof GitHub> =
+		isRemoteRepoOrOrgConfigured() ? getPATOctokit() : getDefaultOctokitClient();
+
+	const now = new Date().toISOString();
+
+	// Mark each invalid signature with invalidated_at and reason
+	for (const { signer, reason } of invalidSignatures) {
+		const signerEntry = claFileContent.signedContributors.find(
+			(s) =>
+				s.id === signer.id &&
+				s.comment_id === signer.comment_id &&
+				!s.invalidated_at,
+		);
+		if (signerEntry) {
+			signerEntry.invalidated_at = now;
+			signerEntry.invalidated_reason = reason;
+		}
+	}
+
+	const invalidNames = invalidSignatures.map((s) => s.signer.name).join(", ");
+	const contentString = JSON.stringify(claFileContent, null, 2);
+	const contentBinary = Buffer.from(contentString).toString("base64");
+
+	const result = await octokitInstance.repos.createOrUpdateFileContents({
+		owner: input.getRemoteOrgName() || context.repo.owner,
+		repo: input.getRemoteRepoName() || context.repo.repo,
+		path: input.getPathToSignatures(),
+		sha,
+		message: `Invalidated signatures: ${invalidNames} (comments were deleted or edited)`,
+		content: contentBinary,
+		branch: input.getBranch(),
+	});
+
+	// Return the new SHA for subsequent operations
+	return (result.data.content as any)?.sha || sha;
 }
 
 function isRemoteRepoOrOrgConfigured(): boolean {
