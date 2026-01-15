@@ -1314,7 +1314,7 @@ function validateSingleSignature(signer) {
             return null; // Valid
         }
         catch (error) {
-            if (error.status === 404) {
+            if (error.status === 404 || error.status === "404") {
                 core.info(`Signature invalid for ${signer.name}: comment not found (deleted)`);
                 return "comment_deleted";
             }

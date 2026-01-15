@@ -86,7 +86,7 @@ async function validateSingleSignature(
 
 		return null; // Valid
 	} catch (error: any) {
-		if (error.status === 404) {
+		if (error.status === 404 || error.status === "404") {
 			core.info(
 				`Signature invalid for ${signer.name}: comment not found (deleted)`,
 			);
