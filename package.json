@@ -1,6 +1,6 @@
 {
   "name": "github-action",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "GitHub Action for storing CAA signatures",
   "main": "lib/main.js",
   "scripts": {
