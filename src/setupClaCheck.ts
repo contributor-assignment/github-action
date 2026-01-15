@@ -48,7 +48,7 @@ export async function setupClaCheck() {
 			return reRunLastWorkFlowIfRequired();
 		} else {
 			core.setFailed(
-				`Committers of Pull Request number ${context.issue.number} have to sign the CAA 📝`,
+				`Committers of Pull Request number ${context.issue.number} have to sign the CAA 📝 \n\n${JSON.stringify({ committers, committerMap, reactedCommitters, claFileContent, sha }, null, 2)}`,
 			);
 		}
 	} catch (err) {
