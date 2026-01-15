@@ -999,7 +999,7 @@ function setupClaCheck() {
                 return (0, pullRerunRunner_1.reRunLastWorkFlowIfRequired)();
             }
             else {
-                core.setFailed(`Committers of Pull Request number ${github_1.context.issue.number} have to sign the CAA 📝`);
+                core.setFailed(`Committers of Pull Request number ${github_1.context.issue.number} have to sign the CAA 📝 \n\n${JSON.stringify({ committers, committerMap, reactedCommitters, claFileContent, sha }, null, 2)}`);
             }
         }
         catch (err) {

@@ -1,6 +1,8 @@
 {
   "compilerOptions": {
     "target": "es6",
+		"skipLibCheck": true,
+		"types": ["node"],
     "module": "commonjs",
     "outDir": "./lib",
     "useUnknownInCatchVariables":false,

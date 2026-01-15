@@ -7,7 +7,7 @@
     "test": "jest",
     "build": "tsc && ncc build",
     "buildAndAdd": "npm run build && git add .",
-		"build:release": "tsc && ncc build && release-it"
+    "build:release": "tsc && ncc build && release-it"
   },
   "husky": {
     "hooks": {
