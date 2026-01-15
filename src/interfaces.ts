@@ -21,7 +21,8 @@ export interface CommittersDetails {
     updated_at?: string
     comment_id?: number,
     body?: string,
-    repoId?: string
+    repoId?: string,
+    comment_url?: string
 }
 export interface LabelName {
     current_name: string,

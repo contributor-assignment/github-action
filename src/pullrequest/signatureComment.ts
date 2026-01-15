@@ -30,6 +30,7 @@ export default async function signatureWithPRComment(
 			created_at: prComment.created_at,
 			repoId: repoId,
 			pullRequestNo: context.issue.number,
+			comment_url: `https://github.com/${context.repo.owner}/${context.repo.repo}/pull/${context.issue.number}#issuecomment-${prComment.id}`,
 		});
 	});
 	listOfPRComments.map((comment) => {
