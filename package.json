@@ -1,7 +1,7 @@
 {
   "name": "github-action",
   "version": "0.0.1",
-  "description": "GitHub Action for storing CLA signatures",
+  "description": "GitHub Action for storing CAA signatures",
   "main": "lib/main.js",
   "scripts": {
     "test": "jest",

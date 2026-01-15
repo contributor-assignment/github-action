@@ -1,39 +1,39 @@
-name: "CLA assistant lite"
-description: "An action to handle the Contributor License Agreement (CLA) and Developer Certificate of Orgin (DCO)"
+name: "CAA assistant lite"
+description: "An action to handle the Contributor License Agreement (CAA) and Developer Certificate of Orgin (DCO)"
 author: "SAP"
 branding:
   icon: "award"
   color: blue
 inputs:
   path-to-signatures:
-    description: "Give a path for storing CLAs in a json file "
-    default: "./signatures/cla.json"
+    description: "Give a path for storing CAAs in a json file "
+    default: "./signatures/caa.json"
   branch:
-    description: "provide a branch where all the CLAs are stored"
+    description: "provide a branch where all the CAAs are stored"
     default: "master"
   allowlist:
-    description: "users in the allow list don't have to sign the CLA document"
+    description: "users in the allow list don't have to sign the CAA document"
     default: ""
   remote-repository-name:
     description: "provide the remote repository name where all the signatures should be stored"
   remote-organization-name:
     description: "provide the remote organization name where all the signatures should be stored"
   path-to-document:
-    description: "Fully qualified web link to the document - example: https://github.com/cla-assistant/github-action/blob/master/SAPCLA.md"
+    description: "Fully qualified web link to the document - example: https://github.com/caa-assistant/github-action/blob/master/SAPCAA.md"
   signed-commit-message:
-    description: "Commit message when a new contributor signs the CLA in a PR"
+    description: "Commit message when a new contributor signs the CAA in a PR"
   signed-empty-commit-message:
-    description: "Commit message when a new contributor signs the CLA (empty)"
+    description: "Commit message when a new contributor signs the CAA (empty)"
   create-file-commit-message:
     description: "Commit message when a new file is created"
   custom-notsigned-prcomment:
     description: "Introductory message to ask new contributors to sign"
   custom-pr-sign-comment:
-    description: "The signature to be committed in order to sign the CLA."
+    description: "The signature to be committed in order to sign the CAA."
   custom-allsigned-prcomment:
-    description: "pull request comment when everyone has signed, defaults to **CLA Assistant Lite** All Contributors have signed the CLA."
+    description: "pull request comment when everyone has signed, defaults to **CAA Assistant Lite** All Contributors have signed the CAA."
   use-dco-flag:
-    description: "Set this to true if you want to use a dco instead of a cla"
+    description: "Set this to true if you want to use a dco instead of a caa"
     default: "false"
   lock-pullrequest-aftermerge:
     description: "Will lock the pull request after merge so that the signature the contributors cannot revoke their signature comments after merge"

@@ -1,6 +1,6 @@
-# Contributing to CLA Assistant
+# Contributing to CAA Assistant
 
-You want to contribute to CLA Assistant? Welcome! Please read this document to understand what you can do:
+You want to contribute to CAA Assistant? Welcome! Please read this document to understand what you can do:
  * [Help Others](#help-others)
  * [Analyze Issues](#analyze-issues)
  * [Report an Issue](#report-an-issue)
@@ -8,7 +8,7 @@ You want to contribute to CLA Assistant? Welcome! Please read this document to u
 
 ## Help Others
 
-You can help CLA Assistant by helping others who use it and need support.
+You can help CAA Assistant by helping others who use it and need support.
 
 ## Analyze Issues
 
@@ -19,10 +19,10 @@ Additional work could include any further information, or a gist, or it might be
 
 ## Report an Issue
 
-If you find a bug - behavior of CLA Assistant code contradicting your expectation - you are welcome to report it.
+If you find a bug - behavior of CAA Assistant code contradicting your expectation - you are welcome to report it.
 We can only handle well-reported, actual bugs, so please follow the guidelines below.
 
-Once you have familiarized with the guidelines, you can go to the [GitHub issue tracker for CLA Assistant](https://github.com/cla-assistant/cla-assistant/issues/new) to report the issue.
+Once you have familiarized with the guidelines, you can go to the [GitHub issue tracker for CAA Assistant](https://github.com/cla-assistant/cla-assistant/issues/new) to report the issue.
 
 ### Quick Checklist for Bug Reports
 
@@ -70,20 +70,20 @@ The labels can only be set and modified by committers.
 
 ### Issue Reporting Disclaimer
 
-We want to improve the quality of CLA Assistant and good bug reports are welcome! But our capacity is limited, thus we reserve the right to close or to not process insufficient bug reports in favor of those which are very cleanly documented and easy to reproduce. Even though we would like to solve each well-documented issue, there is always the chance that it will not happen - remember: CLA Assistant is Open Source and comes without warranty.
+We want to improve the quality of CAA Assistant and good bug reports are welcome! But our capacity is limited, thus we reserve the right to close or to not process insufficient bug reports in favor of those which are very cleanly documented and easy to reproduce. Even though we would like to solve each well-documented issue, there is always the chance that it will not happen - remember: CAA Assistant is Open Source and comes without warranty.
 
 Bug report analysis support is very welcome! (e.g. pre-analysis or proposing solutions)
 
 
 ## Contribute Code
 
-You are welcome to contribute code to CLA Assistant in order to fix bugs or to implement new features.
+You are welcome to contribute code to CAA Assistant in order to fix bugs or to implement new features.
 
 There are three important things to know:
 
 1.  You must be aware that you need to submit [Developer Certificate of Origin](https://developercertificate.org/) in order for your contribution to be accepted. This is common practice in all major Open Source projects.
 2.  There are **several requirements regarding code style, quality, and product standards** which need to be met (we also have to follow them). The respective section below gives more details on the coding guidelines.
-3.  **Not all proposed contributions can be accepted**. Some features may e.g. just fit a third-party add-on better. The code must fit the overall direction of CLA Assistant and really improve it. The more effort you invest, the better you should clarify in advance whether the contribution fits: the best way would be to just open an issue to discuss the feature you plan to implement (make it clear you intend to contribute).
+3.  **Not all proposed contributions can be accepted**. Some features may e.g. just fit a third-party add-on better. The code must fit the overall direction of CAA Assistant and really improve it. The more effort you invest, the better you should clarify in advance whether the contribution fits: the best way would be to just open an issue to discuss the feature you plan to implement (make it clear you intend to contribute).
 
 ## Developer Certificate of Origin (DCO)
 
@@ -116,9 +116,9 @@ These are some of the rules we try to follow:
     - ```Fixes #(issueNumber)```
     - Do NOT add a colon after "Fixes" - this prevents automatic closing.
 6.  Create a Pull Request
-7.  Follow the link posted by the CLA assistant to your pull request and accept it, as described in detail above.
+7.  Follow the link posted by the CAA assistant to your pull request and accept it, as described in detail above.
 8.  Wait for our code review and approval, possibly enhancing your change on request
-    -   Note that the CLA Assistant developers also have their regular duties, so depending on the required effort for reviewing, testing and clarification this may take a while
+    -   Note that the CAA Assistant developers also have their regular duties, so depending on the required effort for reviewing, testing and clarification this may take a while
 
 9.  Once the change has been approved we will inform you in a comment
 10.  We will close the pull request, feel free to delete the now obsolete branch

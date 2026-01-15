@@ -1,6 +1,6 @@
 # Security Vulnerabilities
 
-The CLA Assistant is built with security and data privacy in mind to ensure your data is safe.
+The CAA Assistant is built with security and data privacy in mind to ensure your data is safe.
 
 ## Reporting
 
