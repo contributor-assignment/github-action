@@ -29,7 +29,8 @@
     "actions-toolkit": "^2.1.0",
     "husky": "^4.3.8",
     "lodash": "^4.17.21",
-    "node-fetch": "^3.3.0"
+    "node-fetch": "^3.3.0",
+    "release-it": "^19.2.3"
   },
   "devDependencies": {
     "@octokit/types": "8.1.1",
