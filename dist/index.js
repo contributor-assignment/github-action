@@ -860,8 +860,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-const octokit_1 = __nccwpck_require__(3258);
 const github_1 = __nccwpck_require__(5438);
+const octokit_1 = __nccwpck_require__(3258);
 const getInputs_1 = __nccwpck_require__(3611);
 function signatureWithPRComment(committerMap, committers) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -869,7 +869,7 @@ function signatureWithPRComment(committerMap, committers) {
         let prResponse = yield octokit_1.octokit.issues.listComments({
             owner: github_1.context.repo.owner,
             repo: github_1.context.repo.repo,
-            issue_number: github_1.context.issue.number
+            issue_number: github_1.context.issue.number,
         });
         let listOfPRComments = [];
         let filteredListOfPRComments = [];
@@ -881,10 +881,10 @@ function signatureWithPRComment(committerMap, committers) {
                 body: prComment.body.trim().toLowerCase(),
                 created_at: prComment.created_at,
                 repoId: repoId,
-                pullRequestNo: github_1.context.issue.number
+                pullRequestNo: github_1.context.issue.number,
             });
         });
-        listOfPRComments.map(comment => {
+        listOfPRComments.map((comment) => {
             if (isCommentSignedByUser(comment.body || "", comment.name)) {
                 filteredListOfPRComments.push(comment);
             }
@@ -893,24 +893,24 @@ function signatureWithPRComment(committerMap, committers) {
             delete filteredListOfPRComments[i].body;
         }
         /*
-        *checking if the reacted committers are not the signed committers(not in the storage file) and filtering only the unsigned committers
-        */
-        const newSigned = filteredListOfPRComments.filter(commentedCommitter => committerMap.notSigned.some(notSignedCommitter => commentedCommitter.id === notSignedCommitter.id));
+         *checking if the reacted committers are not the signed committers(not in the storage file) and filtering only the unsigned committers
+         */
+        const newSigned = filteredListOfPRComments.filter((commentedCommitter) => committerMap.notSigned.some((notSignedCommitter) => commentedCommitter.id === notSignedCommitter.id));
         /*
-        * checking if the commented users are only the contributors who has committed in the same PR (This is needed for the PR Comment and changing the status to success when all the contributors has reacted to the PR)
-        */
-        const onlyCommitters = committers.filter(committer => filteredListOfPRComments.some(commentedCommitter => committer.id == commentedCommitter.id));
+         * checking if the commented users are only the contributors who has committed in the same PR (This is needed for the PR Comment and changing the status to success when all the contributors has reacted to the PR)
+         */
+        const onlyCommitters = committers.filter((committer) => filteredListOfPRComments.some((commentedCommitter) => committer.id == commentedCommitter.id));
         const commentedCommitterMap = {
             newSigned,
             onlyCommitters,
-            allSignedFlag: false
+            allSignedFlag: false,
         };
         return commentedCommitterMap;
     });
 }
 exports["default"] = signatureWithPRComment;
 function isCommentSignedByUser(comment, commentAuthor) {
-    if (commentAuthor === 'github-actions[bot]') {
+    if (commentAuthor === "github-actions[bot]") {
         return false;
     }
     if ((0, getInputs_1.getCustomPrSignComment)() !== "") {
@@ -918,10 +918,10 @@ function isCommentSignedByUser(comment, commentAuthor) {
     }
     // using a `string` true or false purposely as github action input cannot have a boolean value
     switch ((0, getInputs_1.getUseDcoFlag)()) {
-        case 'true':
-            return comment.match(/^.*i \s*have \s*read \s*the \s*dco \s*document \s*and \s*i \s*hereby \s*sign \s*the \s*dco.*$/) !== null;
-        case 'false':
-            return comment.match(/^.*i \s*have \s*read \s*the \s*cla \s*document \s*and \s*i \s*hereby \s*sign \s*the \s*cla.*$/) !== null;
+        case "true":
+            return (comment.match(/^.*i \s*have \s*read \s*the \s*dco \s*document \s*and \s*i \s*hereby \s*sign \s*the \s*dco.*$/) !== null);
+        case "false":
+            return (comment.match(/^.*i \s*have \s*read \s*the \s*caa \s*document \s*and \s*i \s*hereby \s*sign \s*the \s*caa.*$/) !== null);
         default:
             return false;
     }
