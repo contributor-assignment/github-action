@@ -697,7 +697,7 @@ function dco(signed, committerMap) {
     }
     let you = committersCount > 1 ? `you all` : `you`;
     let lineOne = (input.getCustomNotSignedPrComment() ||
-        `<br/>Thank you for your submission, we really appreciate it. Like many open-source projects, we ask that $you sign our [Developer Certificate of Origin](${input.getPathToDocument()}) before we can accept your contribution. You can sign the DCO by just posting a Pull Request Comment same as the below format.<br/>`).replace("$you", you);
+        `<br/>Thank you for your submission. You must sign our [Developer Certificate of Origin](${input.getPathToDocument()}) before we can accept your contribution. You can sign the DCO by just posting a Pull Request Comment same as the below format.<br/>`).replace("$you", you);
     let text = `${lineOne}
    - - -
    ${input.getCustomPrSignComment() || "I have read the DCO Document and I hereby sign the DCO"}
@@ -744,7 +744,7 @@ function caa(signed, committerMap) {
     }
     let you = committersCount > 1 ? `you all` : `you`;
     let lineOne = (input.getCustomNotSignedPrComment() ||
-        `<br/>Thank you for your submission, we really appreciate it. Like many open-source projects, we ask that $you sign our [Contributor License Agreement](${input.getPathToDocument()}) before we can accept your contribution. You can sign the CAA by just posting a Pull Request Comment same as the below format.<br/>`).replace("$you", you);
+        `<br/>Thank you for your submission. You must sign our [Contributor License Agreement](${input.getPathToDocument()}) before we can accept your contribution. You can sign the CAA by just posting a Pull Request Comment same as the below format.<br/>`).replace("$you", you);
     let text = `${lineOne}
    - - -
    ${(0, pr_sign_comment_1.getPrSignComment)()}
@@ -882,6 +882,7 @@ function signatureWithPRComment(committerMap, committers) {
                 created_at: prComment.created_at,
                 repoId: repoId,
                 pullRequestNo: github_1.context.issue.number,
+                comment_url: `https://github.com/${github_1.context.repo.owner}/${github_1.context.repo.repo}/pull/${github_1.context.issue.number}#issuecomment-${prComment.id}`,
             });
         });
         listOfPRComments.map((comment) => {
