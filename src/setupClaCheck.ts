@@ -102,7 +102,7 @@ async function createClaFileAndPRComment(
 	committerMap.notSigned = committers;
 	committerMap.signed = [];
 	committers.map((committer) => {
-		if (!committer.id) {
+		if (!committer.userId) {
 			committerMap.unknown.push(committer);
 		}
 	});
@@ -139,14 +139,14 @@ function prepareCommiterMap(
 	committerMap.notSigned = committers.filter(
 		(committer) =>
 			!validSignatures.some(
-				(cla: CommittersDetails) => committer.id === cla.id,
+				(cla: CommittersDetails) => committer.userId === cla.userId,
 			),
 	);
 	committerMap.signed = committers.filter((committer) =>
-		validSignatures.some((cla: CommittersDetails) => committer.id === cla.id),
+		validSignatures.some((cla: CommittersDetails) => committer.userId === cla.userId),
 	);
 	committers.map((committer) => {
-		if (!committer.id) {
+		if (!committer.userId) {
 			committerMap.unknown.push(committer);
 		}
 	});

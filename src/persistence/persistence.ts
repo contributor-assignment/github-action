@@ -86,7 +86,7 @@ export async function markSignaturesInvalidated(
 	for (const { signer, reason } of invalidSignatures) {
 		const signerEntry = claFileContent.signedContributors.find(
 			(s) =>
-				s.id === signer.id &&
+				s.userId === signer.userId &&
 				s.comment_id === signer.comment_id &&
 				!s.invalidated_at,
 		);

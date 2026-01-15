@@ -116,7 +116,7 @@ function prepareCommiterMap(committerMap: CommitterMap, reactedCommitters) {
 	committerMap.notSigned = committerMap.notSigned!.filter(
 		(committer) =>
 			!reactedCommitters.newSigned.some(
-				(reactedCommitter) => committer.id === reactedCommitter.id,
+				(reactedCommitter) => committer.userId === reactedCommitter.userId,
 			),
 	);
 	return committerMap;
@@ -131,11 +131,11 @@ function prepareAllSignedCommitters(
 	/*
 	 * 1) already signed committers in the file 2) signed committers in the PR comment
 	 */
-	const ids = new Set(signedInPrCommitters.map((committer) => committer.id));
+	const userIds = new Set(signedInPrCommitters.map((committer) => committer.userId));
 	allSignedCommitters = [
 		...signedInPrCommitters,
 		...committerMap.signed!.filter(
-			(signedCommitter) => !ids.has(signedCommitter.id),
+			(signedCommitter) => !userIds.has(signedCommitter.userId),
 		),
 	];
 	/*
@@ -143,7 +143,7 @@ function prepareAllSignedCommitters(
 	 */
 	let allSignedFlag: boolean = committers.every((committer) =>
 		allSignedCommitters.some(
-			(reactedCommitter) => committer.id === reactedCommitter.id,
+			(reactedCommitter) => committer.userId === reactedCommitter.userId,
 		),
 	);
 	return allSignedFlag;

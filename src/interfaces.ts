@@ -15,7 +15,7 @@ export interface CommentedCommitterMap {
 }
 export interface CommittersDetails {
     name: string,
-    id: number,
+    userId: number,
     pullRequestNo?: number,
     created_at?: string,
     updated_at?: string
@@ -23,6 +23,10 @@ export interface CommittersDetails {
     body?: string,
     repoId?: string,
     comment_url?: string,
+    document_url?: string,
+    document_hash?: string,
+    receipt_comment_id?: number,
+    receipt_comment_url?: string,
     invalidated_at?: string,
     invalidated_reason?: "comment_deleted" | "comment_edited" | "unverifiable"
 }
@@ -32,7 +36,7 @@ export interface LabelName {
 }
 export interface CommittersCommentDetails {
     name: string,
-    id: number,
+    userId: number,
     comment_id: number,
     body: string,
     created_at: string,

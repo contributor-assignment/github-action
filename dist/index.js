@@ -53,6 +53,101 @@ exports.checkAllowList = checkAllowList;
 
 /***/ }),
 
+/***/ 4640:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.getDocumentHash = void 0;
+const core = __importStar(__nccwpck_require__(2186));
+const crypto = __importStar(__nccwpck_require__(6113));
+const getInputs_1 = __nccwpck_require__(3611);
+/**
+ * Fetches the CAA/DCO document and computes its SHA-256 hash.
+ * This provides proof of which version of the document was agreed to.
+ */
+function getDocumentHash() {
+    return __awaiter(this, void 0, void 0, function* () {
+        const documentUrl = (0, getInputs_1.getPathToDocument)();
+        if (!documentUrl) {
+            core.info("No document URL configured (path-to-document). Skipping hash.");
+            return null;
+        }
+        try {
+            // Convert GitHub blob URLs to raw URLs for fetching
+            const fetchUrl = convertToRawUrl(documentUrl);
+            const response = yield fetch(fetchUrl);
+            if (!response.ok) {
+                core.warning(`Failed to fetch document from ${fetchUrl}: ${response.status} ${response.statusText}`);
+                return null;
+            }
+            const content = yield response.text();
+            const hash = crypto.createHash("sha256").update(content).digest("hex");
+            core.info(`Document hash computed: ${hash.substring(0, 16)}...`);
+            return {
+                url: documentUrl,
+                hash: hash,
+            };
+        }
+        catch (error) {
+            core.warning(`Failed to compute document hash: ${error.message}`);
+            return null;
+        }
+    });
+}
+exports.getDocumentHash = getDocumentHash;
+/**
+ * Converts GitHub blob URLs to raw content URLs.
+ * Example: https://github.com/org/repo/blob/master/CAA.md
+ *       -> https://raw.githubusercontent.com/org/repo/master/CAA.md
+ */
+function convertToRawUrl(url) {
+    const githubBlobRegex = /^https:\/\/github\.com\/([^/]+)\/([^/]+)\/blob\/(.+)$/;
+    const match = url.match(githubBlobRegex);
+    if (match) {
+        const [, owner, repo, path] = match;
+        return `https://raw.githubusercontent.com/${owner}/${repo}/${path}`;
+    }
+    // Return as-is if not a GitHub blob URL
+    return url;
+}
+
+
+/***/ }),
+
 /***/ 5157:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
@@ -122,7 +217,7 @@ function getCommitters() {
                 const committer = extractUserFromCommit(edge.node.commit);
                 let user = {
                     name: committer.login || committer.name,
-                    id: committer.databaseId || '',
+                    userId: committer.databaseId || '',
                     pullRequestNo: github_1.context.issue.number
                 };
                 if (committers.length === 0 || committers.map((c) => {
@@ -132,7 +227,7 @@ function getCommitters() {
                 }
             });
             filteredCommitters = committers.filter((committer) => {
-                return committer.id !== 41898282;
+                return committer.userId !== 41898282;
             });
             return filteredCommitters;
         }
@@ -377,7 +472,7 @@ function markSignaturesInvalidated(sha, claFileContent, invalidSignatures) {
         const now = new Date().toISOString();
         // Mark each invalid signature with invalidated_at and reason
         for (const { signer, reason } of invalidSignatures) {
-            const signerEntry = claFileContent.signedContributors.find((s) => s.id === signer.id &&
+            const signerEntry = claFileContent.signedContributors.find((s) => s.userId === signer.userId &&
                 s.comment_id === signer.comment_id &&
                 !s.invalidated_at);
             if (signerEntry) {
@@ -650,7 +745,7 @@ function getComment() {
 function prepareCommiterMap(committerMap, reactedCommitters) {
     var _a;
     (_a = committerMap.signed) === null || _a === void 0 ? void 0 : _a.push(...reactedCommitters.newSigned);
-    committerMap.notSigned = committerMap.notSigned.filter((committer) => !reactedCommitters.newSigned.some((reactedCommitter) => committer.id === reactedCommitter.id));
+    committerMap.notSigned = committerMap.notSigned.filter((committer) => !reactedCommitters.newSigned.some((reactedCommitter) => committer.userId === reactedCommitter.userId));
     return committerMap;
 }
 function prepareAllSignedCommitters(committerMap, signedInPrCommitters, committers) {
@@ -658,15 +753,15 @@ function prepareAllSignedCommitters(committerMap, signedInPrCommitters, committe
     /*
      * 1) already signed committers in the file 2) signed committers in the PR comment
      */
-    const ids = new Set(signedInPrCommitters.map((committer) => committer.id));
+    const userIds = new Set(signedInPrCommitters.map((committer) => committer.userId));
     allSignedCommitters = [
         ...signedInPrCommitters,
-        ...committerMap.signed.filter((signedCommitter) => !ids.has(signedCommitter.id)),
+        ...committerMap.signed.filter((signedCommitter) => !userIds.has(signedCommitter.userId)),
     ];
     /*
      * checking if all the unsigned committers have reacted to the PR comment (this is needed for changing the content of the PR comment to "All committers have signed the CAA")
      */
-    let allSignedFlag = committers.every((committer) => allSignedCommitters.some((reactedCommitter) => committer.id === reactedCommitter.id));
+    let allSignedFlag = committers.every((committer) => allSignedCommitters.some((reactedCommitter) => committer.userId === reactedCommitter.userId));
     return allSignedFlag;
 }
 
@@ -882,6 +977,29 @@ exports.lockPullRequest = lockPullRequest;
 
 "use strict";
 
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -892,7 +1010,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
+const core = __importStar(__nccwpck_require__(2186));
 const github_1 = __nccwpck_require__(5438);
+const documentHash_1 = __nccwpck_require__(4640);
 const octokit_1 = __nccwpck_require__(3258);
 const getInputs_1 = __nccwpck_require__(3611);
 function signatureWithPRComment(committerMap, committers) {
@@ -908,7 +1028,7 @@ function signatureWithPRComment(committerMap, committers) {
         prResponse === null || prResponse === void 0 ? void 0 : prResponse.data.map((prComment) => {
             listOfPRComments.push({
                 name: prComment.user.login,
-                id: prComment.user.id,
+                userId: prComment.user.id,
                 comment_id: prComment.id,
                 body: prComment.body.trim().toLowerCase(),
                 created_at: prComment.created_at,
@@ -916,6 +1036,13 @@ function signatureWithPRComment(committerMap, committers) {
                 pullRequestNo: github_1.context.issue.number,
                 comment_url: `https://github.com/${github_1.context.repo.owner}/${github_1.context.repo.repo}/pull/${github_1.context.issue.number}#issuecomment-${prComment.id}`,
             });
+        });
+        // Store original comment bodies for receipt generation before filtering
+        const commentBodies = new Map();
+        listOfPRComments.forEach((comment) => {
+            if (comment.comment_id && comment.body) {
+                commentBodies.set(comment.comment_id, comment.body);
+            }
         });
         listOfPRComments.map((comment) => {
             if (isCommentSignedByUser(comment.body || "", comment.name)) {
@@ -928,11 +1055,28 @@ function signatureWithPRComment(committerMap, committers) {
         /*
          *checking if the reacted committers are not the signed committers(not in the storage file) and filtering only the unsigned committers
          */
-        const newSigned = filteredListOfPRComments.filter((commentedCommitter) => committerMap.notSigned.some((notSignedCommitter) => commentedCommitter.id === notSignedCommitter.id));
+        const newSigned = filteredListOfPRComments.filter((commentedCommitter) => committerMap.notSigned.some((notSignedCommitter) => commentedCommitter.userId === notSignedCommitter.userId));
+        // Add document hash and create receipt comments for new signatures
+        if (newSigned.length > 0) {
+            const documentHashResult = yield (0, documentHash_1.getDocumentHash)();
+            for (const signer of newSigned) {
+                if (documentHashResult) {
+                    signer.document_url = documentHashResult.url;
+                    signer.document_hash = documentHashResult.hash;
+                }
+                // Create receipt comment as immutable proof of signature
+                const originalBody = commentBodies.get(signer.comment_id);
+                const receipt = yield createSignatureReceiptComment(signer, originalBody || "", documentHashResult);
+                if (receipt) {
+                    signer.receipt_comment_id = receipt.id;
+                    signer.receipt_comment_url = receipt.url;
+                }
+            }
+        }
         /*
          * checking if the commented users are only the contributors who has committed in the same PR (This is needed for the PR Comment and changing the status to success when all the contributors has reacted to the PR)
          */
-        const onlyCommitters = committers.filter((committer) => filteredListOfPRComments.some((commentedCommitter) => committer.id == commentedCommitter.id));
+        const onlyCommitters = committers.filter((committer) => filteredListOfPRComments.some((commentedCommitter) => committer.userId == commentedCommitter.userId));
         const commentedCommitterMap = {
             newSigned,
             onlyCommitters,
@@ -958,6 +1102,54 @@ function isCommentSignedByUser(comment, commentAuthor) {
         default:
             return false;
     }
+}
+/**
+ * Creates an immutable receipt comment from the bot that quotes the user's signing comment.
+ * This provides proof of signature that the user cannot delete (only repo admins can).
+ */
+function createSignatureReceiptComment(signer, originalComment, documentHash) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const signedAt = new Date(signer.created_at || new Date().toISOString());
+            const formattedDate = signedAt.toLocaleDateString("en-US", {
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+                timeZoneName: "short",
+            });
+            const documentType = (0, getInputs_1.getUseDcoFlag)() === "true" ? "DCO" : "CAA";
+            const documentUrl = (0, getInputs_1.getPathToDocument)();
+            let receiptBody = `### Signature Recorded\n\n`;
+            receiptBody += `@${signer.name} signed the ${documentType} on **${formattedDate}** with the following comment:\n\n`;
+            receiptBody += `> ${originalComment}\n\n`;
+            if (documentUrl) {
+                receiptBody += `**Document:** [${documentType}](${documentUrl})\n`;
+            }
+            if (documentHash === null || documentHash === void 0 ? void 0 : documentHash.hash) {
+                receiptBody += `**Document Hash (SHA-256):** \`${documentHash.hash}\`\n`;
+            }
+            receiptBody += `\n---\n`;
+            receiptBody += `*This receipt was automatically generated and serves as immutable proof of the above signature.*`;
+            const response = yield octokit_1.octokit.issues.createComment({
+                owner: github_1.context.repo.owner,
+                repo: github_1.context.repo.repo,
+                issue_number: github_1.context.issue.number,
+                body: receiptBody,
+            });
+            const receiptUrl = `https://github.com/${github_1.context.repo.owner}/${github_1.context.repo.repo}/pull/${github_1.context.issue.number}#issuecomment-${response.data.id}`;
+            core.info(`Created signature receipt comment for ${signer.name}: ${response.data.id}`);
+            return {
+                id: response.data.id,
+                url: receiptUrl,
+            };
+        }
+        catch (error) {
+            core.warning(`Failed to create signature receipt comment for ${signer.name}: ${error.message}`);
+            return null;
+        }
+    });
 }
 
 
@@ -1074,7 +1266,7 @@ function createClaFileAndPRComment(committers, committerMap) {
         committerMap.notSigned = committers;
         committerMap.signed = [];
         committers.map((committer) => {
-            if (!committer.id) {
+            if (!committer.userId) {
                 committerMap.unknown.push(committer);
             }
         });
@@ -1091,10 +1283,10 @@ function prepareCommiterMap(committers, claFileContent) {
     let committerMap = getInitialCommittersMap();
     // Only consider non-invalidated signatures as valid
     const validSignatures = ((_a = claFileContent === null || claFileContent === void 0 ? void 0 : claFileContent.signedContributors) === null || _a === void 0 ? void 0 : _a.filter((cla) => !cla.invalidated_at)) || [];
-    committerMap.notSigned = committers.filter((committer) => !validSignatures.some((cla) => committer.id === cla.id));
-    committerMap.signed = committers.filter((committer) => validSignatures.some((cla) => committer.id === cla.id));
+    committerMap.notSigned = committers.filter((committer) => !validSignatures.some((cla) => committer.userId === cla.userId));
+    committerMap.signed = committers.filter((committer) => validSignatures.some((cla) => committer.userId === cla.userId));
     committers.map((committer) => {
-        if (!committer.id) {
+        if (!committer.userId) {
             committerMap.unknown.push(committer);
         }
     });
@@ -1265,11 +1457,11 @@ function validateSignatures(signedContributors, currentCommitters) {
     return __awaiter(this, void 0, void 0, function* () {
         const invalidSignatures = [];
         // Get the IDs of committers on the current PR
-        const currentCommitterIds = new Set(currentCommitters.map((c) => c.id));
+        const currentCommitterIds = new Set(currentCommitters.map((c) => c.userId));
         // Only validate signatures that:
         // 1. Belong to committers on the current PR
         // 2. Are not already invalidated
-        const signersToValidate = signedContributors.filter((signer) => currentCommitterIds.has(signer.id) && !signer.invalidated_at);
+        const signersToValidate = signedContributors.filter((signer) => currentCommitterIds.has(signer.userId) && !signer.invalidated_at);
         // Validate each signer
         for (const signer of signersToValidate) {
             const validationResult = yield validateSingleSignature(signer);
@@ -1340,8 +1532,8 @@ function isValidSigningComment(comment) {
 /**
  * Check if a committer has a valid (non-invalidated) signature
  */
-function hasValidSignature(committerId, signedContributors) {
-    return signedContributors.some((signer) => signer.id === committerId && !signer.invalidated_at);
+function hasValidSignature(userId, signedContributors) {
+    return signedContributors.some((signer) => signer.userId === userId && !signer.invalidated_at);
 }
 exports.hasValidSignature = hasValidSignature;
 

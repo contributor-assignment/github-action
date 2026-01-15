@@ -20,14 +20,14 @@ export async function validateSignatures(
 	const invalidSignatures: InvalidSignature[] = [];
 
 	// Get the IDs of committers on the current PR
-	const currentCommitterIds = new Set(currentCommitters.map((c) => c.id));
+	const currentCommitterIds = new Set(currentCommitters.map((c) => c.userId));
 
 	// Only validate signatures that:
 	// 1. Belong to committers on the current PR
 	// 2. Are not already invalidated
 	const signersToValidate = signedContributors.filter(
 		(signer) =>
-			currentCommitterIds.has(signer.id) && !signer.invalidated_at,
+			currentCommitterIds.has(signer.userId) && !signer.invalidated_at,
 	);
 
 	// Validate each signer
@@ -127,10 +127,10 @@ function isValidSigningComment(comment: string): boolean {
  * Check if a committer has a valid (non-invalidated) signature
  */
 export function hasValidSignature(
-	committerId: number,
+	userId: number,
 	signedContributors: CommittersDetails[],
 ): boolean {
 	return signedContributors.some(
-		(signer) => signer.id === committerId && !signer.invalidated_at,
+		(signer) => signer.userId === userId && !signer.invalidated_at,
 	);
 }

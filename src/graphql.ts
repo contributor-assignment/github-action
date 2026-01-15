@@ -55,7 +55,7 @@ export default async function getCommitters(): Promise<CommittersDetails[]> {
             const committer = extractUserFromCommit(edge.node.commit)
             let user = {
                 name: committer.login || committer.name,
-                id: committer.databaseId || '',
+                userId: committer.databaseId || '',
                 pullRequestNo: context.issue.number
             }
             if (committers.length === 0 || committers.map((c) => {
@@ -65,7 +65,7 @@ export default async function getCommitters(): Promise<CommittersDetails[]> {
             }
         })
         filteredCommitters = committers.filter((committer) => {
-            return committer.id !== 41898282
+            return committer.userId !== 41898282
         })
         return filteredCommitters
 
