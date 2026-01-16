@@ -26,6 +26,42 @@ export async function reRunLastWorkFlowIfRequired() {
 	}
 }
 
+/**
+ * Re-runs the last pull_request_target workflow when tampering is detected.
+ * This ensures the PR status check updates properly.
+ * Without this, the issue_comment event creates a separate check that doesn't update the original PR check.
+ */
+export async function reRunLastPRWorkflow(): Promise<void> {
+	if (context.eventName === "pull_request" || context.eventName === "pull_request_target") {
+		core.debug(`rerun not required for event - ${context.eventName}, current run will update status`);
+		return;
+	}
+
+	try {
+		const branch = await getBranchOfPullRequest();
+		const workflowId = await getSelfWorkflowId();
+		const runs = await listWorkflowRunsInBranch(branch, workflowId);
+
+		if (runs.data.total_count > 0) {
+			// Find the most recent pull_request_target run
+			const prRun = runs.data.workflow_runs.find(
+				(run: any) => run.event === "pull_request_target"
+			);
+
+			if (prRun) {
+				core.info(`Tampering detected - re-running workflow run ${prRun.id} to update PR status`);
+				await reRunWorkflow(prRun.id).catch((error) =>
+					core.error(`Error occurred when re-running the workflow: ${error}`),
+				);
+			} else {
+				core.debug("No pull_request_target workflow run found to re-run");
+			}
+		}
+	} catch (error: any) {
+		core.error(`Failed to re-run workflow: ${error.message}`);
+	}
+}
+
 async function getBranchOfPullRequest(): Promise<string> {
 	const pullRequest = await octokit.pulls.get({
 		owner: context.repo.owner,

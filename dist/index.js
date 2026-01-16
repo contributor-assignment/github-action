@@ -547,7 +547,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.reRunLastWorkFlowIfRequired = void 0;
+exports.reRunLastPRWorkflow = exports.reRunLastWorkFlowIfRequired = void 0;
 const core = __importStar(__nccwpck_require__(2186));
 const github_1 = __nccwpck_require__(5438);
 const octokit_1 = __nccwpck_require__(3258);
@@ -572,6 +572,39 @@ function reRunLastWorkFlowIfRequired() {
     });
 }
 exports.reRunLastWorkFlowIfRequired = reRunLastWorkFlowIfRequired;
+/**
+ * Re-runs the last pull_request_target workflow when tampering is detected.
+ * This ensures the PR status check updates properly.
+ * Without this, the issue_comment event creates a separate check that doesn't update the original PR check.
+ */
+function reRunLastPRWorkflow() {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (github_1.context.eventName === "pull_request" || github_1.context.eventName === "pull_request_target") {
+            core.debug(`rerun not required for event - ${github_1.context.eventName}, current run will update status`);
+            return;
+        }
+        try {
+            const branch = yield getBranchOfPullRequest();
+            const workflowId = yield getSelfWorkflowId();
+            const runs = yield listWorkflowRunsInBranch(branch, workflowId);
+            if (runs.data.total_count > 0) {
+                // Find the most recent pull_request_target run
+                const prRun = runs.data.workflow_runs.find((run) => run.event === "pull_request_target");
+                if (prRun) {
+                    core.info(`Tampering detected - re-running workflow run ${prRun.id} to update PR status`);
+                    yield reRunWorkflow(prRun.id).catch((error) => core.error(`Error occurred when re-running the workflow: ${error}`));
+                }
+                else {
+                    core.debug("No pull_request_target workflow run found to re-run");
+                }
+            }
+        }
+        catch (error) {
+            core.error(`Failed to re-run workflow: ${error.message}`);
+        }
+    });
+}
+exports.reRunLastPRWorkflow = reRunLastPRWorkflow;
 function getBranchOfPullRequest() {
     return __awaiter(this, void 0, void 0, function* () {
         const pullRequest = yield octokit_1.octokit.pulls.get({
@@ -824,7 +857,7 @@ function dco(signed, committerMap) {
     }
     let you = committersCount > 1 ? `you all` : `you`;
     let lineOne = (input.getCustomNotSignedPrComment() ||
-        `<br/>Thank you for your submission. You must sign our [Developer Certificate of Origin](${input.getPathToDocument()}) before we can accept your contribution. You can sign the DCO by just posting a Pull Request Comment same as the below format.<br/>`).replace("$you", you);
+        `<br/>Thank you for your submission. You must agree to our [Developer Certificate of Origin](${input.getPathToDocument()}) before we can accept your contribution. You can sign the DCO by just posting a Pull Request Comment same as the below format.<br/>`).replace("$you", you);
     let text = `${lineOne}
    - - -
    ${input.getCustomPrSignComment() || "I have read the DCO Document and I hereby sign the DCO"}
@@ -871,7 +904,7 @@ function caa(signed, committerMap) {
     }
     let you = committersCount > 1 ? `you all` : `you`;
     let lineOne = (input.getCustomNotSignedPrComment() ||
-        `<br/>Thank you for your submission. You must sign our [Contributor License Agreement](${input.getPathToDocument()}) before we can accept your contribution. You can sign the CAA by just posting a Pull Request Comment same as the below format.<br/>`).replace("$you", you);
+        `<br/>Thank you for your submission. You must agree to our [Contributor License Agreement](${input.getPathToDocument()}) before we can accept your contribution. You can sign the CAA by just posting a Pull Request Comment same as the below format.<br/>`).replace("$you", you);
     let text = `${lineOne}
    - - -
    ${(0, pr_sign_comment_1.getPrSignComment)()}
@@ -1274,6 +1307,8 @@ function setupClaCheck() {
             for (const { signer, reason } of invalidSignatures) {
                 yield (0, signatureComment_1.updateReceiptCommentForTampering)(signer, reason);
             }
+            // Re-run the last PR workflow so the PR status updates
+            yield (0, pullRerunRunner_1.reRunLastPRWorkflow)();
         }
         committerMap = prepareCommiterMap(committers, claFileContent);
         try {

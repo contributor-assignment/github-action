@@ -14,7 +14,7 @@ import {
 	updateFile,
 	markSignaturesInvalidated,
 } from "./persistence/persistence";
-import { reRunLastWorkFlowIfRequired } from "./pullRerunRunner";
+import { reRunLastWorkFlowIfRequired, reRunLastPRWorkflow } from "./pullRerunRunner";
 import prCommentSetup from "./pullrequest/pullRequestComment";
 import { updateReceiptCommentForTampering } from "./pullrequest/signatureComment";
 import { validateSignatures } from "./validateSignatures";
@@ -46,6 +46,9 @@ export async function setupClaCheck() {
 		for (const { signer, reason } of invalidSignatures) {
 			await updateReceiptCommentForTampering(signer, reason);
 		}
+
+		// Re-run the last PR workflow so the PR status updates
+		await reRunLastPRWorkflow();
 	}
 
 	committerMap = prepareCommiterMap(committers, claFileContent) as CommitterMap;

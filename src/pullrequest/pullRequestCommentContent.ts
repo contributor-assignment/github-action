@@ -32,7 +32,7 @@ function dco(signed: boolean, committerMap: CommitterMap): string {
 	let you = committersCount > 1 ? `you all` : `you`;
 	let lineOne = (
 		input.getCustomNotSignedPrComment() ||
-		`<br/>Thank you for your submission. You must sign our [Developer Certificate of Origin](${input.getPathToDocument()}) before we can accept your contribution. You can sign the DCO by just posting a Pull Request Comment same as the below format.<br/>`
+		`<br/>Thank you for your submission. You must agree to our [Developer Certificate of Origin](${input.getPathToDocument()}) before we can accept your contribution. You can sign the DCO by just posting a Pull Request Comment same as the below format.<br/>`
 	).replace("$you", you);
 	let text = `${lineOne}
    - - -
@@ -92,7 +92,7 @@ function caa(signed: boolean, committerMap: CommitterMap): string {
 	let you = committersCount > 1 ? `you all` : `you`;
 	let lineOne = (
 		input.getCustomNotSignedPrComment() ||
-		`<br/>Thank you for your submission. You must sign our [Contributor License Agreement](${input.getPathToDocument()}) before we can accept your contribution. You can sign the CAA by just posting a Pull Request Comment same as the below format.<br/>`
+		`<br/>Thank you for your submission. You must agree to our [Contributor License Agreement](${input.getPathToDocument()}) before we can accept your contribution. You can sign the CAA by just posting a Pull Request Comment same as the below format.<br/>`
 	).replace("$you", you);
 	let text = `${lineOne}
    - - -
