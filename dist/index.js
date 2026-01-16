@@ -1010,6 +1010,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.updateReceiptCommentForTampering = void 0;
 const core = __importStar(__nccwpck_require__(2186));
 const github_1 = __nccwpck_require__(5438);
 const documentHash_1 = __nccwpck_require__(4640);
@@ -1025,24 +1026,22 @@ function signatureWithPRComment(committerMap, committers) {
         });
         let listOfPRComments = [];
         let filteredListOfPRComments = [];
+        // Store original comment bodies (with original casing) for receipt generation
+        const originalBodies = new Map();
         prResponse === null || prResponse === void 0 ? void 0 : prResponse.data.map((prComment) => {
+            var _a;
+            const originalBody = ((_a = prComment.body) === null || _a === void 0 ? void 0 : _a.trim()) || "";
+            originalBodies.set(prComment.id, originalBody);
             listOfPRComments.push({
                 name: prComment.user.login,
                 userId: prComment.user.id,
                 comment_id: prComment.id,
-                body: prComment.body.trim().toLowerCase(),
+                body: originalBody.toLowerCase(),
                 created_at: prComment.created_at,
                 repoId: repoId,
                 pullRequestNo: github_1.context.issue.number,
                 comment_url: `https://github.com/${github_1.context.repo.owner}/${github_1.context.repo.repo}/pull/${github_1.context.issue.number}#issuecomment-${prComment.id}`,
             });
-        });
-        // Store original comment bodies for receipt generation before filtering
-        const commentBodies = new Map();
-        listOfPRComments.forEach((comment) => {
-            if (comment.comment_id && comment.body) {
-                commentBodies.set(comment.comment_id, comment.body);
-            }
         });
         listOfPRComments.map((comment) => {
             if (isCommentSignedByUser(comment.body || "", comment.name)) {
@@ -1065,7 +1064,7 @@ function signatureWithPRComment(committerMap, committers) {
                     signer.document_hash = documentHashResult.hash;
                 }
                 // Create receipt comment as immutable proof of signature
-                const originalBody = commentBodies.get(signer.comment_id);
+                const originalBody = originalBodies.get(signer.comment_id);
                 const receipt = yield createSignatureReceiptComment(signer, originalBody || "", documentHashResult);
                 if (receipt) {
                     signer.receipt_comment_id = receipt.id;
@@ -1104,6 +1103,59 @@ function isCommentSignedByUser(comment, commentAuthor) {
     }
 }
 /**
+ * Updates the receipt comment to show that tampering was detected.
+ * This marks the receipt as invalidated while preserving the original signature proof.
+ */
+function updateReceiptCommentForTampering(signer, reason) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (!signer.receipt_comment_id) {
+            core.info(`No receipt comment to update for ${signer.name}`);
+            return;
+        }
+        try {
+            // First, get the existing receipt comment to preserve original content
+            const existingComment = yield octokit_1.octokit.issues.getComment({
+                owner: github_1.context.repo.owner,
+                repo: github_1.context.repo.repo,
+                comment_id: signer.receipt_comment_id,
+            });
+            const tamperedAt = new Date().toLocaleDateString("en-US", {
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+                timeZoneName: "short",
+            });
+            const reasonText = reason === "comment_deleted"
+                ? "deleted their original signing comment"
+                : reason === "comment_edited"
+                    ? "edited their original signing comment to remove the signing phrase"
+                    : "has an unverifiable signature";
+            const documentType = (0, getInputs_1.getUseDcoFlag)() === "true" ? "DCO" : "CAA";
+            let warningSection = `\n\n---\n\n`;
+            warningSection += `## ⚠️ TAMPERING DETECTED\n\n`;
+            warningSection += `**@${signer.name}** ${reasonText} on **${tamperedAt}**.\n\n`;
+            warningSection += `> **Important:** Tampering with or deleting a signature comment does not void the original agreement. `;
+            warningSection += `The ${documentType} was signed and recorded at the time shown above. `;
+            warningSection += `This tampering has been logged and may result in consequences including loss of contribution privileges.\n\n`;
+            warningSection += `The contributor must re-sign the ${documentType} to continue contributing.`;
+            const updatedBody = existingComment.data.body + warningSection;
+            yield octokit_1.octokit.issues.updateComment({
+                owner: github_1.context.repo.owner,
+                repo: github_1.context.repo.repo,
+                comment_id: signer.receipt_comment_id,
+                body: updatedBody,
+            });
+            core.info(`Updated receipt comment for ${signer.name} to show tampering detected`);
+        }
+        catch (error) {
+            core.warning(`Failed to update receipt comment for tampering: ${error.message}`);
+        }
+    });
+}
+exports.updateReceiptCommentForTampering = updateReceiptCommentForTampering;
+/**
  * Creates an immutable receipt comment from the bot that quotes the user's signing comment.
  * This provides proof of signature that the user cannot delete (only repo admins can).
  */
@@ -1124,6 +1176,7 @@ function createSignatureReceiptComment(signer, originalComment, documentHash) {
             let receiptBody = `### Signature Recorded\n\n`;
             receiptBody += `@${signer.name} signed the ${documentType} on **${formattedDate}** with the following comment:\n\n`;
             receiptBody += `> ${originalComment}\n\n`;
+            receiptBody += `— [Original comment](${signer.comment_url}) by @${signer.name}\n\n`;
             if (documentUrl) {
                 receiptBody += `**Document:** [${documentType}](${documentUrl})\n`;
             }
@@ -1204,6 +1257,7 @@ const graphql_1 = __importDefault(__nccwpck_require__(5157));
 const persistence_1 = __nccwpck_require__(5802);
 const pullRerunRunner_1 = __nccwpck_require__(4766);
 const pullRequestComment_1 = __importDefault(__nccwpck_require__(3326));
+const signatureComment_1 = __nccwpck_require__(1905);
 const validateSignatures_1 = __nccwpck_require__(5613);
 function setupClaCheck() {
     return __awaiter(this, void 0, void 0, function* () {
@@ -1216,6 +1270,10 @@ function setupClaCheck() {
         if (invalidSignatures.length > 0) {
             core.info(`Found ${invalidSignatures.length} invalid signature(s). Marking as invalidated...`);
             sha = yield (0, persistence_1.markSignaturesInvalidated)(sha, claFileContent, invalidSignatures);
+            // Update receipt comments to show tampering was detected
+            for (const { signer, reason } of invalidSignatures) {
+                yield (0, signatureComment_1.updateReceiptCommentForTampering)(signer, reason);
+            }
         }
         committerMap = prepareCommiterMap(committers, claFileContent);
         try {

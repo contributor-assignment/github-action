@@ -16,6 +16,7 @@ import {
 } from "./persistence/persistence";
 import { reRunLastWorkFlowIfRequired } from "./pullRerunRunner";
 import prCommentSetup from "./pullrequest/pullRequestComment";
+import { updateReceiptCommentForTampering } from "./pullrequest/signatureComment";
 import { validateSignatures } from "./validateSignatures";
 
 export async function setupClaCheck() {
@@ -40,6 +41,11 @@ export async function setupClaCheck() {
 			`Found ${invalidSignatures.length} invalid signature(s). Marking as invalidated...`,
 		);
 		sha = await markSignaturesInvalidated(sha, claFileContent, invalidSignatures);
+
+		// Update receipt comments to show tampering was detected
+		for (const { signer, reason } of invalidSignatures) {
+			await updateReceiptCommentForTampering(signer, reason);
+		}
 	}
 
 	committerMap = prepareCommiterMap(committers, claFileContent) as CommitterMap;

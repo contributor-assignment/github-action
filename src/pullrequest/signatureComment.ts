@@ -22,24 +22,23 @@ export default async function signatureWithPRComment(
 	let listOfPRComments = [] as CommittersDetails[];
 	let filteredListOfPRComments = [] as CommittersDetails[];
 
+	// Store original comment bodies (with original casing) for receipt generation
+	const originalBodies = new Map<number, string>();
+
 	prResponse?.data.map((prComment) => {
+		const originalBody = prComment.body?.trim() || "";
+		originalBodies.set(prComment.id, originalBody);
+
 		listOfPRComments.push({
 			name: prComment.user.login,
 			userId: prComment.user.id,
 			comment_id: prComment.id,
-			body: prComment.body.trim().toLowerCase(),
+			body: originalBody.toLowerCase(), // lowercase for comparison only
 			created_at: prComment.created_at,
 			repoId: repoId,
 			pullRequestNo: context.issue.number,
 			comment_url: `https://github.com/${context.repo.owner}/${context.repo.repo}/pull/${context.issue.number}#issuecomment-${prComment.id}`,
 		});
-	});
-	// Store original comment bodies for receipt generation before filtering
-	const commentBodies = new Map<number, string>();
-	listOfPRComments.forEach((comment) => {
-		if (comment.comment_id && comment.body) {
-			commentBodies.set(comment.comment_id, comment.body);
-		}
 	});
 
 	listOfPRComments.map((comment) => {
@@ -70,7 +69,7 @@ export default async function signatureWithPRComment(
 			}
 
 			// Create receipt comment as immutable proof of signature
-			const originalBody = commentBodies.get(signer.comment_id!);
+			const originalBody = originalBodies.get(signer.comment_id!);
 			const receipt = await createSignatureReceiptComment(
 				signer,
 				originalBody || "",
@@ -135,6 +134,67 @@ interface ReceiptCommentResult {
 }
 
 /**
+ * Updates the receipt comment to show that tampering was detected.
+ * This marks the receipt as invalidated while preserving the original signature proof.
+ */
+export async function updateReceiptCommentForTampering(
+	signer: CommittersDetails,
+	reason: "comment_deleted" | "comment_edited" | "unverifiable",
+): Promise<void> {
+	if (!signer.receipt_comment_id) {
+		core.info(`No receipt comment to update for ${signer.name}`);
+		return;
+	}
+
+	try {
+		// First, get the existing receipt comment to preserve original content
+		const existingComment = await octokit.issues.getComment({
+			owner: context.repo.owner,
+			repo: context.repo.repo,
+			comment_id: signer.receipt_comment_id,
+		});
+
+		const tamperedAt = new Date().toLocaleDateString("en-US", {
+			year: "numeric",
+			month: "long",
+			day: "numeric",
+			hour: "2-digit",
+			minute: "2-digit",
+			timeZoneName: "short",
+		});
+
+		const reasonText = reason === "comment_deleted"
+			? "deleted their original signing comment"
+			: reason === "comment_edited"
+			? "edited their original signing comment to remove the signing phrase"
+			: "has an unverifiable signature";
+
+		const documentType = getUseDcoFlag() === "true" ? "DCO" : "CAA";
+
+		let warningSection = `\n\n---\n\n`;
+		warningSection += `## ⚠️ TAMPERING DETECTED\n\n`;
+		warningSection += `**@${signer.name}** ${reasonText} on **${tamperedAt}**.\n\n`;
+		warningSection += `> **Important:** Tampering with or deleting a signature comment does not void the original agreement. `;
+		warningSection += `The ${documentType} was signed and recorded at the time shown above. `;
+		warningSection += `This tampering has been logged and may result in consequences including loss of contribution privileges.\n\n`;
+		warningSection += `The contributor must re-sign the ${documentType} to continue contributing.`;
+
+		const updatedBody = existingComment.data.body + warningSection;
+
+		await octokit.issues.updateComment({
+			owner: context.repo.owner,
+			repo: context.repo.repo,
+			comment_id: signer.receipt_comment_id,
+			body: updatedBody,
+		});
+
+		core.info(`Updated receipt comment for ${signer.name} to show tampering detected`);
+	} catch (error: any) {
+		core.warning(`Failed to update receipt comment for tampering: ${error.message}`);
+	}
+}
+
+/**
  * Creates an immutable receipt comment from the bot that quotes the user's signing comment.
  * This provides proof of signature that the user cannot delete (only repo admins can).
  */
@@ -160,6 +220,7 @@ async function createSignatureReceiptComment(
 		let receiptBody = `### Signature Recorded\n\n`;
 		receiptBody += `@${signer.name} signed the ${documentType} on **${formattedDate}** with the following comment:\n\n`;
 		receiptBody += `> ${originalComment}\n\n`;
+		receiptBody += `— [Original comment](${signer.comment_url}) by @${signer.name}\n\n`;
 
 		if (documentUrl) {
 			receiptBody += `**Document:** [${documentType}](${documentUrl})\n`;
